@@ -16,27 +16,38 @@ int main(int argc, char *argv[]) {
   HeadInfo attrCatHeader;
 
   // load the headers of both the blocks into relCatHeader and attrCatHeader.
-  // (we will implement these functions later)
   relCatBuffer.getHeader(&relCatHeader);
-  attrCatBuffer.getHeader(&attrCatHeader);
 
   for (int i = 0; i < relCatHeader.numEntries; i++) {
+    attrCatBuffer = RecBuffer(ATTRCAT_BLOCK);
+    attrCatBuffer.getHeader(&attrCatHeader);
 
     Attribute relCatRecord[RELCAT_NO_ATTRS]; // will store the record from the relation catalog
     relCatBuffer.getRecord(relCatRecord, i);
 
+    HeadInfo currentAttrCatHeader = attrCatHeader;
+
     printf("Relation: %s\n", relCatRecord[RELCAT_REL_NAME_INDEX].sVal);
 
-    for (int j = 0; j < attrCatHeader.numEntries; j++) {
-      // declare attrCatRecord and load the attribute catalog entry into it
-      Attribute attrCatRecord[ATTRCAT_NO_ATTRS];
-      attrCatBuffer.getRecord(attrCatRecord, j);
+    do {
+      for (int j = 0; j < currentAttrCatHeader.numEntries; j++) {
+        // declare attrCatRecord and load the attribute catalog entry into it
+        Attribute attrCatRecord[ATTRCAT_NO_ATTRS];
+        attrCatBuffer.getRecord(attrCatRecord, j);
 
-      if (strcmp(relCatRecord[RELCAT_REL_NAME_INDEX].sVal, attrCatRecord[ATTRCAT_REL_NAME_INDEX].sVal) == 0) {
-        const char *attrType = attrCatRecord[ATTRCAT_ATTR_TYPE_INDEX].nVal == NUMBER ? "NUM" : "STR";
-        printf("  %s: %s\n", attrCatRecord[ATTRCAT_ATTR_NAME_INDEX].sVal, attrType);
+        if (strcmp(relCatRecord[RELCAT_REL_NAME_INDEX].sVal, attrCatRecord[ATTRCAT_REL_NAME_INDEX].sVal) == 0) {
+          const char *attrType = attrCatRecord[ATTRCAT_ATTR_TYPE_INDEX].nVal == NUMBER ? "NUM" : "STR";
+          printf("  %s: %s\n", attrCatRecord[ATTRCAT_ATTR_NAME_INDEX].sVal, attrType);
+        }
       }
-    }
+
+      if (currentAttrCatHeader.rblock != -1) {
+        attrCatBuffer = RecBuffer(currentAttrCatHeader.rblock);
+        attrCatBuffer.getHeader(&currentAttrCatHeader);
+      } else {
+        break;
+      }
+    } while (true);
 
     printf("\n");
   }

@@ -7,7 +7,6 @@ BlockBuffer::BlockBuffer(int blockNum) {
   this->blockNum = blockNum;
 }
 
-
 RecBuffer::RecBuffer(int blockNum) : BlockBuffer::BlockBuffer(blockNum) {}
 
 // load the block header into the argument pointer
