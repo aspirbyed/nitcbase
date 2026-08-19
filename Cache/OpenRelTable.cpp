@@ -107,6 +107,50 @@ OpenRelTable::OpenRelTable() {
       prevEntry->next = attrCacheEntry;
     }
   }
+
+  /* 
+   * Following code is only for Exercise 1 in the Stage 3, 
+   * where you've to add entries for Student relation into the cache.
+   */
+
+  /**** setting up Student relation in the Relation Cache Table ****/
+  RecBuffer studentRelCatBlock(RELCAT_BLOCK);
+  Attribute studentRelCatRecord[RELCAT_NO_ATTRS];
+  studentRelCatBlock.getRecord(studentRelCatRecord, 2); // slot 3 has the Student relation
+
+  struct RelCacheEntry studentRelCacheEntry;
+  RelCacheTable::recordToRelCatEntry(studentRelCatRecord, &studentRelCacheEntry.relCatEntry);
+  studentRelCacheEntry.recId.block = RELCAT_BLOCK;
+  studentRelCacheEntry.recId.slot = 2;
+
+  // allocate this on the heap because we want it to persist outside this function
+  RelCacheTable::relCache[2] = (struct RelCacheEntry*)malloc(sizeof(RelCacheEntry));
+  *(RelCacheTable::relCache[2]) = studentRelCacheEntry;
+
+  /**** setting up Student relation in the Attribute Cache Table ****/
+  // set up the attributes of the Student relation similarly.
+  RecBuffer studentAttrCatBlock(ATTRCAT_BLOCK);
+  Attribute studentAttrCatRecord[ATTRCAT_NO_ATTRS];
+  for(int i=12; i < 16; i++){ // slots 12-15 have the attributes of Student relation
+    studentAttrCatBlock.getRecord(studentAttrCatRecord, i);
+
+    struct AttrCacheEntry* attrCacheEntry = (struct AttrCacheEntry*)malloc(sizeof(AttrCacheEntry));
+    AttrCacheTable::recordToAttrCatEntry(studentAttrCatRecord, &attrCacheEntry->attrCatEntry);
+    attrCacheEntry->recId.block = ATTRCAT_BLOCK;
+    attrCacheEntry->recId.slot = i;
+    attrCacheEntry->next = nullptr;
+
+    // link the entries together
+    if(i == 12) {
+      AttrCacheTable::attrCache[2] = attrCacheEntry; // head of the linked list for Student relation
+    } else {
+      struct AttrCacheEntry* prevEntry = AttrCacheTable::attrCache[2];
+      while(prevEntry->next != nullptr) {
+        prevEntry = prevEntry->next;
+      }
+      prevEntry->next = attrCacheEntry;
+    }
+  }
 }
 
 OpenRelTable::~OpenRelTable() {
@@ -141,6 +185,10 @@ int OpenRelTable::getRelId(char relName[ATTR_SIZE]) {
   // if relname is ATTRCAT_RELNAME, return ATTRCAT_RELID
   if (strcmp(relName, ATTRCAT_RELNAME) == 0) {
     return ATTRCAT_RELID;
+  }
+
+  if (strcmp(relName, "Students") == 0) {
+    return 2; // Student relation has relId 2
   }
 
   return E_RELNOTOPEN;
