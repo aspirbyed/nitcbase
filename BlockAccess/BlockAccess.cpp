@@ -11,7 +11,6 @@ RecId BlockAccess::linearSearch(int relId, char attrName[ATTR_SIZE], union Attri
     // let block and slot denote the record id of the record being currently checked
     int block, slot;  // will store the record id of the record being currently checked
 
-
     // if the current search index record is invalid(i.e. both block and slot = -1)
     if (prevRecId.block == -1 && prevRecId.slot == -1) {
         // (no hits from previous search; search should start from the
