@@ -17,7 +17,7 @@ subsequent stages, we will implement the write-back functionality here.
 StaticBuffer::~StaticBuffer() {}
 
 int StaticBuffer::getFreeBuffer(int blockNum) {
-  if (blockNum < 0 || blockNum > DISK_BLOCKS) {
+  if (blockNum < 0 || blockNum >= DISK_BLOCKS) {
     return E_OUTOFBOUND;
   }
   int allocatedBuffer;
@@ -41,7 +41,7 @@ int StaticBuffer::getFreeBuffer(int blockNum) {
 int StaticBuffer::getBufferNum(int blockNum) {
   // Check if blockNum is valid (between zero and DISK_BLOCKS)
   // and return E_OUTOFBOUND if not valid.
-  if (blockNum < 0 || blockNum > DISK_BLOCKS) {
+  if (blockNum < 0 || blockNum >= DISK_BLOCKS) {
     return E_OUTOFBOUND;
   }
 
