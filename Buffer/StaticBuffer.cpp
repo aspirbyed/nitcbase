@@ -2,8 +2,19 @@
 
 unsigned char StaticBuffer::blocks[BUFFER_CAPACITY][BLOCK_SIZE];
 struct BufferMetaInfo StaticBuffer::metainfo[BUFFER_CAPACITY];
+unsigned char StaticBuffer::blockAllocMap[DISK_BLOCKS];
 
 StaticBuffer::StaticBuffer() {
+  // copy blockAllocMap blocks from disk to buffer (using readblock() of disk)
+  // blocks 0 to 3
+  for (int i = 0; i < 4; i++) {
+    unsigned char buffer[BLOCK_SIZE];
+    Disk::readBlock(buffer, i);
+    for(int slot = 0; slot < BLOCK_SIZE; slot++){
+      blockAllocMap[i * BLOCK_SIZE + slot] = buffer[slot];
+    }
+  }
+
   for (int bufferIndex = 0; bufferIndex < BUFFER_CAPACITY; bufferIndex++){
     metainfo[bufferIndex].free = true;
     metainfo[bufferIndex].dirty = false;
@@ -14,6 +25,15 @@ StaticBuffer::StaticBuffer() {
 
 // write back all modified blocks on system exit
 StaticBuffer::~StaticBuffer() {
+  // copy blockAllocMap blocks from buffer to disk(using writeblock() of disk)
+  for (int i = 0; i < 4; i++) {
+    unsigned char block[BLOCK_SIZE];
+    for(int slot = 0; slot < BLOCK_SIZE; slot++){
+      block[slot] = blockAllocMap[i * BLOCK_SIZE + slot];
+    }
+    Disk::writeBlock(block, i);
+  }
+
   /*iterate through all the buffer blocks,
     write back blocks with metainfo as free=false,dirty=true
     using Disk::writeBlock()
