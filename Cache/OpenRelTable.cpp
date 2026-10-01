@@ -320,7 +320,7 @@ int OpenRelTable::closeRel(int relId) {
 
   /****** Releasing the Relation Cache entry of the relation ******/
 
-  if (!tableMetaInfo[relId].free && RelCacheTable::relCache[relId] != nullptr) {
+  if (!tableMetaInfo[relId].free && RelCacheTable::relCache[relId] != nullptr && RelCacheTable::relCache[relId]->dirty) {
     /* Get the Relation Catalog entry from RelCacheTable::relCache
     Then convert it to a record using RelCacheTable::relCatEntryToRecord(). */
     union Attribute record[RELCAT_NO_ATTRS];
