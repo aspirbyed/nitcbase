@@ -127,13 +127,45 @@ OpenRelTable::~OpenRelTable() {
     }
   }
 
-  // free the memory allocated for rel-id 0 and 1 in both the relation and attribute caches
+  /**** Closing the catalog relations in the relation cache ****/
 
-  // releasing the relation cache entry of the attribute catalog
+  //releasing the relation cache entry of the attribute catalog
+  if (RelCacheTable::relCache[ATTRCAT_RELID]->dirty) {
+    /* Get the Relation Catalog entry from RelCacheTable::relCache
+    Then convert it to a record using RelCacheTable::relCatEntryToRecord(). */
+    RelCatEntry relCatEntry = RelCacheTable::relCache[ATTRCAT_RELID]->relCatEntry;
+
+    union Attribute relCatRecord[RELCAT_NO_ATTRS];
+    RelCacheTable::relCatEntryToRecord(&relCatEntry, relCatRecord);
+
+    // declaring an object of RecBuffer class to write back to the buffer
+    RecBuffer relCatBlock(RelCacheTable::relCache[ATTRCAT_RELID]->recId.block);
+
+    // Write back to the buffer using relCatBlock.setRecord() with recId.slot
+    relCatBlock.setRecord(relCatRecord, RelCacheTable::relCache[ATTRCAT_RELID]->recId.slot);
+  }
+
+  // free the memory dynamically allocated to this RelCacheEntry
   free(RelCacheTable::relCache[ATTRCAT_RELID]);
   RelCacheTable::relCache[ATTRCAT_RELID] = nullptr;
 
   // releasing the relation cache entry of the relation catalog
+  if(RelCacheTable::relCache[RELCAT_RELID]->dirty) {
+    /* Get the Relation Catalog entry from RelCacheTable::relCache
+    Then convert it to a record using RelCacheTable::relCatEntryToRecord(). */
+    RelCatEntry relCatEntry = RelCacheTable::relCache[RELCAT_RELID]->relCatEntry;
+
+    union Attribute relCatRecord[RELCAT_NO_ATTRS];
+    RelCacheTable::relCatEntryToRecord(&relCatEntry, relCatRecord);
+
+    // declaring an object of RecBuffer class to write back to the buffer
+    RecBuffer relCatBlock(RelCacheTable::relCache[RELCAT_RELID]->recId.block);
+
+    // Write back to the buffer using relCatBlock.setRecord() with recId.slot
+    relCatBlock.setRecord(relCatRecord, RelCacheTable::relCache[RELCAT_RELID]->recId.slot);
+  }
+
+  // free the memory dynamically allocated for this RelCacheEntry
   free(RelCacheTable::relCache[RELCAT_RELID]);
   RelCacheTable::relCache[RELCAT_RELID] = nullptr;
 
@@ -367,3 +399,4 @@ int OpenRelTable::closeRel(int relId) {
 
   return SUCCESS;
 }
+
