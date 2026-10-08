@@ -692,14 +692,11 @@ int BlockAccess::deleteRelation(char relName[ATTR_SIZE]) {
                 // (the block being released is the "Last Block" of the relation.)
                 /* update the Relation Catalog entry's LastBlock field for this
                    relation with the block number of the previous block. */
-                RecBuffer relCatBlock(relCatRecId.block);
+                RelCatEntry relCatEntry;
+                RelCacheTable::getRelCatEntry(ATTRCAT_RELID, &relCatEntry);
 
-                Attribute relCatEntryRecord[RELCAT_NO_ATTRS];
-                relCatBlock.getRecord(relCatEntryRecord, relCatRecId.slot);
-                
-                relCatEntryRecord[RELCAT_LAST_BLOCK_INDEX].nVal = header.lblock;
-                
-                relCatBlock.setRecord(relCatEntryRecord, relCatRecId.slot);
+                relCatEntry.lastBlk = header.lblock;
+                RelCacheTable::setRelCatEntry(ATTRCAT_RELID, &relCatEntry);
             }
 
             // (Since the attribute catalog will never be empty(why?), we do not
