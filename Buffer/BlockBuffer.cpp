@@ -4,6 +4,7 @@
 #include <cstring>
 #include <iostream>
 
+// BlockBuffer constructor 1 & 2
 BlockBuffer::BlockBuffer(char blockType){
     // allocate a block on the disk and a buffer in memory to hold the new block of
     // given type using getFreeBlock function and get the return error codes if any.
@@ -29,9 +30,25 @@ BlockBuffer::BlockBuffer(int blockNum) {
   this->blockNum = blockNum;
 }
 
+// RecBuffer constructor 1 & 2
 RecBuffer::RecBuffer() : BlockBuffer('R'){}
 
 RecBuffer::RecBuffer(int blockNum) : BlockBuffer::BlockBuffer(blockNum) {}
+
+// IndBuffer constructor 1 & 2
+IndBuffer::IndBuffer(char blockType) : BlockBuffer(blockType){}
+
+IndBuffer::IndBuffer(int blockNum) : BlockBuffer(blockNum){}
+
+// IndInternal constructor 1 & 2
+IndInternal::IndInternal() : IndBuffer('I'){} // 'I' used to denote IndInternal.
+
+IndInternal::IndInternal(int blockNum) : IndBuffer(blockNum){}
+
+// IndLeaf constructor 1 & 2
+IndLeaf::IndLeaf() : IndBuffer('L'){} // 'L' used to denote IndLeaf.
+
+IndLeaf::IndLeaf(int blockNum) : IndBuffer(blockNum){}
 
 // load the block header into the argument pointer
 int BlockBuffer::getHeader(struct HeadInfo *head) {
@@ -43,10 +60,12 @@ int BlockBuffer::getHeader(struct HeadInfo *head) {
 
   // populate the numEntries, numAttrs and numSlots fields in *head
   memcpy(&head->numSlots, bufferPtr + 24, 4);
-  memcpy(&head->numEntries, bufferPtr + 16, 4);
   memcpy(&head->numAttrs, bufferPtr + 20, 4);
+  memcpy(&head->numEntries, bufferPtr + 16, 4);
   memcpy(&head->rblock, bufferPtr + 12, 4);
   memcpy(&head->lblock, bufferPtr + 8, 4);
+  memcpy(&head->pblock, bufferPtr + 4, 4);
+  memcpy(&head->blockType, bufferPtr, 4);
 
   return SUCCESS;
 }
@@ -273,8 +292,8 @@ int BlockBuffer::setBlockType(int blockType){
     // store the input block type in the first 4 bytes of the buffer.
     // (hint: cast bufferPtr to int32_t* and then assign it)
     // *((int32_t *)bufferPtr) = blockType;
-    int blockBufferType  = *((int32_t *)bufferPtr);
-    blockBufferType = blockType;
+    int32_t *blockTypePtr = (int32_t *)bufferPtr;
+    *blockTypePtr = blockType;
 
     // update the StaticBuffer::blockAllocMap entry corresponding to the
     // object's block number to `blockType`.
@@ -412,4 +431,84 @@ void BlockBuffer::releaseBlock(){
       // set the object's blockNum to INVALID_BLOCK (-1)
       this->blockNum = INVALID_BLOCKNUM;
     }
+}
+
+int IndInternal::getEntry(void *ptr, int indexNum) {
+    // if the indexNum is not in the valid range of [0, MAX_KEYS_INTERNAL-1]
+    //     return E_OUTOFBOUND.
+    if (indexNum < 0 || indexNum >= MAX_KEYS_INTERNAL){
+      return E_OUTOFBOUND;
+    }
+
+    unsigned char *bufferPtr;
+    /* get the starting address of the buffer containing the block
+       using loadBlockAndGetBufferPtr(&bufferPtr). */
+    int ret = loadBlockAndGetBufferPtr(&bufferPtr);
+
+    // if loadBlockAndGetBufferPtr(&bufferPtr) != SUCCESS
+    //     return the value returned by the call.
+    if (ret != SUCCESS){
+      return ret;
+    }
+
+    // typecast the void pointer to an internal entry pointer
+    struct InternalEntry *internalEntry = (struct InternalEntry *)ptr;
+
+    /*
+    - copy the entries from the indexNum`th entry to *internalEntry
+    - make sure that each field is copied individually as in the following code
+    - the lChild and rChild fields of InternalEntry are of type int32_t
+    - int32_t is a type of int that is guaranteed to be 4 bytes across every
+      C++ implementation. sizeof(int32_t) = 4
+    */
+
+    /* the indexNum'th entry will begin at an offset of
+       HEADER_SIZE + (indexNum * (sizeof(int) + ATTR_SIZE) )         [why?]
+       from bufferPtr */
+    unsigned char *entryPtr = bufferPtr + HEADER_SIZE + (indexNum * 20);
+
+    memcpy(&(internalEntry->lChild), entryPtr, sizeof(int32_t));
+    memcpy(&(internalEntry->attrVal), entryPtr + 4, sizeof(Attribute));
+    memcpy(&(internalEntry->rChild), entryPtr + 20, 4);
+
+    // return SUCCESS.
+    return SUCCESS;
+}
+
+int IndLeaf::getEntry(void *ptr, int indexNum) {
+
+    // if the indexNum is not in the valid range of [0, MAX_KEYS_LEAF-1]
+    //     return E_OUTOFBOUND.
+    if (indexNum < 0 || indexNum >= MAX_KEYS_LEAF){
+      return E_OUTOFBOUND;
+    }
+
+    unsigned char *bufferPtr;
+    /* get the starting address of the buffer containing the block
+       using loadBlockAndGetBufferPtr(&bufferPtr). */
+    int ret = loadBlockAndGetBufferPtr(&bufferPtr);
+
+    // if loadBlockAndGetBufferPtr(&bufferPtr) != SUCCESS
+    //     return the value returned by the call.
+    if (ret != SUCCESS){
+      return ret;
+    }
+
+    // copy the indexNum'th Index entry in buffer to memory ptr using memcpy
+
+    /* the indexNum'th entry will begin at an offset of
+       HEADER_SIZE + (indexNum * LEAF_ENTRY_SIZE)  from bufferPtr */
+    unsigned char *entryPtr = bufferPtr + HEADER_SIZE + (indexNum * LEAF_ENTRY_SIZE);
+    memcpy((struct Index *)ptr, entryPtr, LEAF_ENTRY_SIZE);
+
+    // return SUCCESS
+    return SUCCESS;
+}
+
+int IndInternal::setEntry(void *ptr, int indexNum) {
+  return 0;
+}
+
+int IndLeaf::setEntry(void *ptr, int indexNum) {
+  return 0;
 }
