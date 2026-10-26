@@ -380,6 +380,20 @@ int OpenRelTable::closeRel(int relId) {
   struct AttrCacheEntry* attrCacheEntry = AttrCacheTable::attrCache[relId];
   while (attrCacheEntry != nullptr) {
     struct AttrCacheEntry* nextEntry = attrCacheEntry->next;
+    if (attrCacheEntry->dirty) {
+        /* Get the Attribute Catalog entry from attrCache
+          Then convert it to a record using AttrCacheTable::attrCatEntryToRecord().
+          Write back that entry by instantiating RecBuffer class. Use recId
+          member field and recBuffer.setRecord() */
+        union Attribute record[ATTRCAT_NO_ATTRS];
+        AttrCatEntry attrCatEntry = attrCacheEntry->attrCatEntry;
+        AttrCacheTable::attrCatEntryToRecord(&attrCatEntry, record);
+
+        RecId recId = attrCacheEntry->recId;
+        RecBuffer attrCatBlock(recId.block);
+        attrCatBlock.setRecord(record, recId.slot);
+    }
+
     free(attrCacheEntry);
     attrCacheEntry = nextEntry;
   }
