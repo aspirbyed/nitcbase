@@ -1,4 +1,5 @@
 #include "Algebra.h"
+#include "../Buffer/BlockBuffer.h"
 
 #include <cstring>
 #include <cstdlib>
@@ -301,6 +302,8 @@ int Algebra::select(char srcRel[ATTR_SIZE], char targetRel[ATTR_SIZE], char attr
     RelCacheTable::resetSearchIndex(srcRelId);
     AttrCacheTable::resetSearchIndex(srcRelId, attr);
 
+    resetComparisonCount();
+
     // read every record that satisfies the condition by repeatedly calling
     // BlockAccess::search() until there are no more records to be read
     ret = BlockAccess::search(srcRelId, record, attr, attrVal, op);
@@ -324,6 +327,8 @@ int Algebra::select(char srcRel[ATTR_SIZE], char targetRel[ATTR_SIZE], char attr
         // BlockAccess::search() again
         ret = BlockAccess::search(srcRelId, record, attr, attrVal, op);
     }
+
+    std::cout << "Number of Comparison: " << getComparisonCount() << "\n";
 
     // Close the targetRel by calling closeRel() method of schema layer
     Schema::closeRel(targetRel);

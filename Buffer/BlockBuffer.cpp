@@ -4,6 +4,16 @@
 #include <cstring>
 #include <iostream>
 
+unsigned long long comparisonCount = 0;
+
+void resetComparisonCount() {
+  comparisonCount = 0;
+}
+
+unsigned long long getComparisonCount() {
+  return comparisonCount;
+}
+
 // BlockBuffer constructor 1 & 2
 BlockBuffer::BlockBuffer(char blockType){
     // allocate a block on the disk and a buffer in memory to hold the new block of
@@ -175,6 +185,7 @@ int RecBuffer::getSlotMap(unsigned char *slotMap) {
 
 int compareAttrs(union Attribute attr1, union Attribute attr2, int attrType) {
     double diff;
+    comparisonCount++;
 
     if (attrType == STRING){
       diff = strcmp(attr1.sVal, attr2.sVal);
