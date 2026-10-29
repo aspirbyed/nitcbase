@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
+#include <bits/stdc++.h>
 
 unsigned long long comparisonCount = 0;
 
@@ -12,6 +13,16 @@ void resetComparisonCount() {
 
 unsigned long long getComparisonCount() {
   return comparisonCount;
+}
+
+std::unordered_set<int> diskAccess;
+
+void resetDiskAccess() {
+  diskAccess = {};
+}
+
+unsigned long long getDiskAccessCount() {
+  return diskAccess.size();
 }
 
 // BlockBuffer constructor 1 & 2
@@ -37,6 +48,7 @@ BlockBuffer::BlockBuffer(char blockType){
 }
 
 BlockBuffer::BlockBuffer(int blockNum) {
+  diskAccess.insert(blockNum);
   this->blockNum = blockNum;
 }
 

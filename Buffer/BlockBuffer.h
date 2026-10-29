@@ -29,6 +29,10 @@ void resetComparisonCount();
 
 unsigned long long getComparisonCount();
 
+void resetDiskAccess();
+
+unsigned long long getDiskAccessCount();
+
 struct InternalEntry {
   int32_t lChild;
   union Attribute attrVal;

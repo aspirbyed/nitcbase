@@ -303,6 +303,7 @@ int Algebra::select(char srcRel[ATTR_SIZE], char targetRel[ATTR_SIZE], char attr
     AttrCacheTable::resetSearchIndex(srcRelId, attr);
 
     resetComparisonCount();
+    resetDiskAccess();
 
     // read every record that satisfies the condition by repeatedly calling
     // BlockAccess::search() until there are no more records to be read
@@ -329,6 +330,7 @@ int Algebra::select(char srcRel[ATTR_SIZE], char targetRel[ATTR_SIZE], char attr
     }
 
     std::cout << "Number of Comparison: " << getComparisonCount() << "\n";
+    std::cout << "Number of Disk Access: " << getDiskAccessCount() << "\n";
 
     // Close the targetRel by calling closeRel() method of schema layer
     Schema::closeRel(targetRel);
