@@ -25,6 +25,14 @@ typedef union Attribute {
 
 int compareAttrs(Attribute attr1, Attribute attr2, int attrType);
 
+void resetComparisonCount();
+
+unsigned long long getComparisonCount();
+
+void resetDiskAccess();
+
+unsigned long long getDiskAccessCount();
+
 struct InternalEntry {
   int32_t lChild;
   union Attribute attrVal;
